@@ -11,7 +11,7 @@ class paypal(commands.Cog):
     async def token_refresher(self):
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                "https://api-m.sandbox.paypal.com/v1/oauth2/token",
+                "https://api.sandbox.paypal.com/v1/oauth2/token",
                 headers={
                     "Accept": "application/json",
                     "Accept-Language": "en_US",

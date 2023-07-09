@@ -133,27 +133,28 @@ class cmds(commands.Cog):
             }
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    "https://api-m.sandbox.paypal.com/v2/invoicing/invoices",
+                    "https://api.sandbox.paypal.com/v2/invoicing/invoices",
                     headers={
                         "Authorization": f"Bearer {self.bot.temp_token}",
                         "Content-Type": "application/json",
                         "Prefer": "return=representation",
                     },
-                    data=paypal_data,
+                    json=paypal_data,
                 ) as resp:
-                    print(await resp.json())
-                    return
                     uid = (await resp.json())["id"]
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    f"https://api-m.sandbox.paypal.com/v2/invoicing/invoices/{uid}/send",
+                    f"https://api.sandbox.paypal.com/v2/invoicing/invoices/{uid}/send",
                     headers={
                         "Authorization": f"Bearer {self.bot.temp_token}",
                         "Content-Type": "application/json",
                     },
-                    data='{ "send_to_invoicer": true }',
+                    json={"send_to_invoicer": True},
                 ) as resp:
                     print(f"Invoice sent to {email}!")
+            await ctx.channel.send(
+                "I've sent you an invoice on your email! Please check your email and pay the invoice, Thanks for purchasing with us!"
+            )
             await Transactions.create(
                 id=f"TXN-{interaction.user.id}",
                 payapl_id=uid,
@@ -161,9 +162,6 @@ class cmds(commands.Cog):
                 product_id=product.id,
                 amount=product.price,
                 product_name=product.name,
-            )
-            await ctx.channel.send(
-                "I've sent you an invoice on your email! Please check your email and pay the invoice, Thanks for purchasing with us!"
             )
             return
         embeds = []

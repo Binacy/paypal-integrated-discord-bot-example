@@ -58,7 +58,7 @@ class Transactions(models.Model):
     class Meta:
         table = "transactions"
 
-    id = fields.IntField(pk=True)
+    id = fields.TextField(pk=True)
     payapl_id = fields.TextField()
     user_id = fields.BigIntField()
     paid = fields.BooleanField(default=False)
