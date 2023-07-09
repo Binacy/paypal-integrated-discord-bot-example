@@ -57,20 +57,80 @@ class cmds(commands.Cog):
                 await ctx.channel.send("Alright! Cancelling the order!")
                 return
             uid = None
-            paypal_data = '{ "detail": { "invoice_number": "TXN-{{user_id}}", "reference": "deal-ref", "invoice_date": "{{year}}-{{month}}-{{day}}", "currency_code": "USD", "note": "Thank you for your purchase!!!.", "term": "No refunds." }, "invoicer": { "name": { "given_name": "David", "surname": "Larusso" }, "address": { "address_line_1": "1234 First Street", "address_line_2": "337673 Hillside Court", "admin_area_2": "Anytown", "admin_area_1": "CA", "postal_code": "98765", "country_code": "US" }, "email_address": "merchant@example.com", "phones": [ { "country_code": "001", "national_number": "4085551234", "phone_type": "MOBILE" } ], "website": "www.test.com", "logo_url": "https://example.com/logo.PNG" }, "primary_recipients": [ { "billing_info": { "name": { "given_name": "Stephanie", "surname": "Meyers" }, "address": { "address_line_1": "1234 Main Street", "admin_area_2": "Anytown", "admin_area_1": "CA", "postal_code": "98765", "country_code": "US" }, "email_address": "{{email}}", "phones": [ { "country_code": "001", "national_number": "4884551234", "phone_type": "HOME" } ] }, "shipping_info": { "name": { "given_name": "Stephanie", "surname": "Meyers" }, "address": { "address_line_1": "1234 Main Street", "admin_area_2": "Anytown", "admin_area_1": "CA", "postal_code": "98765", "country_code": "US" } } } ], "items": [ { "name": "{{product_name}}", "description": "{{product_description}}", "quantity": "1", "unit_amount": { "currency_code": "USD", "value": "{{product_price}}" }, "unit_of_measure": "QUANTITY" } ] } }'
-            paypal_data.replace("{{user_id}}", str(ctx.author.id)).replace(
-                "{{email}}", "email"
-            ).replace("{{product.name}}", product.name).replace(
-                "{{product.description}}", product.description
-            ).replace(
-                "{{product.price}}", str(product.price)
-            ).replace(
-                "{{year}}", str(ctx.message.created_at.year)
-            ).replace(
-                "{{month}}", str(ctx.message.created_at.month).zfill(2)
-            ).replace(
-                "{{day}}", str(ctx.message.created_at.day).zfill(2)
-            )
+            paypal_data = {
+                "detail": {
+                    "invoice_number": f"TXN-{interaction.user.id}",
+                    "reference": "deal-ref",
+                    "currency_code": "USD",
+                    "note": "Thank you for your purchase!!!.",
+                    "term": "No refunds.",
+                },
+                "invoicer": {
+                    "name": {"given_name": "David", "surname": "Larusso"},
+                    "address": {
+                        "address_line_1": "1234 First Street",
+                        "address_line_2": "337673 Hillside Court",
+                        "admin_area_2": "Anytown",
+                        "admin_area_1": "CA",
+                        "postal_code": "98765",
+                        "country_code": "US",
+                    },
+                    "email_address": "merchant@example.com",
+                    "phones": [
+                        {
+                            "country_code": "001",
+                            "national_number": "4085551234",
+                            "phone_type": "MOBILE",
+                        }
+                    ],
+                    "website": "www.test.com",
+                    "logo_url": "https://example.com/logo.PNG",
+                },
+                "primary_recipients": [
+                    {
+                        "billing_info": {
+                            "name": {"given_name": "Stephanie", "surname": "Meyers"},
+                            "address": {
+                                "address_line_1": "1234 Main Street",
+                                "admin_area_2": "Anytown",
+                                "admin_area_1": "CA",
+                                "postal_code": "98765",
+                                "country_code": "US",
+                            },
+                            "email_address": f"{email}",
+                            "phones": [
+                                {
+                                    "country_code": "001",
+                                    "national_number": "4884551234",
+                                    "phone_type": "HOME",
+                                }
+                            ],
+                        },
+                        "shipping_info": {
+                            "name": {"given_name": "Stephanie", "surname": "Meyers"},
+                            "address": {
+                                "address_line_1": "1234 Main Street",
+                                "admin_area_2": "Anytown",
+                                "admin_area_1": "CA",
+                                "postal_code": "98765",
+                                "country_code": "US",
+                            },
+                        },
+                    }
+                ],
+                "items": [
+                    {
+                        "name": f"{product.name}",
+                        "description": f"{product.description}",
+                        "quantity": "1",
+                        "unit_amount": {
+                            "currency_code": "USD",
+                            "value": f"{product.price}",
+                        },
+                        "unit_of_measure": "QUANTITY",
+                    }
+                ],
+            }
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     "https://api-m.sandbox.paypal.com/v2/invoicing/invoices",
