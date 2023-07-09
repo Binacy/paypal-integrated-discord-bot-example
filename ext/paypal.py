@@ -1,5 +1,6 @@
 import aiohttp, core.config as config, asyncio
 from discord.ext import commands
+from models import Transactions, Products
 
 
 class paypal(commands.Cog):
@@ -7,6 +8,26 @@ class paypal(commands.Cog):
         self.bot = bot
         self.bot.temp_token = None
         self.bot.loop.create_task(self.token_refresher())
+        self.bot.loop.create_task(self.product_sender())
+
+    async def product_sender(self):
+        async for t in Transactions.all():
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://api.sandbox.paypal.com/v2/invoicing/invoices/{t.payapl_id}"
+                    ) as resp:
+                    data = await resp.json()
+                    if data["status"] == "PAID":
+                        t.paid = True
+                        await t.save()
+                        try:
+                            product = await Products.get(id=t.product_id)
+                        except:
+                            continue
+                        user = self.bot.get_user(t.user_id) or await self.bot.fetch_user(t.user_id)
+                        await user.send(f"Thank you for purchasing {product.name}! Here's your product url: {product.image}")
+        await asyncio.sleep(20)
+        self.bot.loop.create_task(self.product_sender())
 
     async def token_refresher(self):
         async with aiohttp.ClientSession() as session:
