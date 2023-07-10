@@ -193,6 +193,7 @@ class cmds(commands.Cog):
         await sexy_paginator.start(ctx, pages=embeds)
 
     @app_commands.command(name="order-cancel")
+    @commands.is_owner()
     async def _cancel(self, interaction: discord.Interaction, transaction_id: int):
         try:
             transaction = await Transactions.get(id=transaction_id)
@@ -205,15 +206,23 @@ class cmds(commands.Cog):
             await interaction.response.send_message("This order is already paid!")
             return
         await transaction.delete()
+        async with aiohttp.ClientSession() as session:
+            async with session.delete(
+                f"https://api.sandbox.paypal.com/v2/invoicing/invoices/{transaction.payapl_id}",
+                headers={"Authorization": f"Bearer {self.bot.temp_token}"},
+            ) as resp:
+                print(f"Invoice cancelled for {transaction.user_id}")
         await interaction.response.send_message("Order cancelled!")
 
     @app_commands.command(name="earnings")
+    @commands.is_owner()
     async def earnings(self, interaction: discord.Interaction):
         records = await Transactions.filter(paid=True).all()
         total = sum([r.amount for r in records])
         await interaction.response.send_message(f"Total earnings: {total}")
 
     @app_commands.command(name="discount")
+    @commands.is_owner()
     async def discount(self, interaction: discord.Interaction, discount: int):
         ignored = []
         async for p in Products.all():
@@ -232,6 +241,7 @@ class cmds(commands.Cog):
         )
 
     @app_commands.command(name="product-add")
+    @commands.is_owner()
     async def add(
         self,
         interaction: discord.Interaction,
@@ -267,6 +277,7 @@ class cmds(commands.Cog):
         await interaction.response.send_message(f"Added product {name} with 10 stocks!")
 
     @app_commands.command(name="product-remove")
+    @commands.is_owner()
     async def remove(self, interaction: discord.Interaction, id: int):
         await Products.filter(id=id).delete()
         await interaction.response.send_message("Removed product!")

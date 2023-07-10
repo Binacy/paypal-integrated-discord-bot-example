@@ -11,7 +11,8 @@ class paypal(commands.Cog):
         self.bot.loop.create_task(self.product_sender())
 
     async def product_sender(self):
-        async for t in Transactions.all():
+        records = await Transactions.filter(paid=False).all()
+        for t in records:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
                     f"https://api.sandbox.paypal.com/v2/invoicing/invoices/{t.payapl_id}"

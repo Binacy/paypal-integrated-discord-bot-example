@@ -16,6 +16,13 @@ class ppbot(commands.Bot):
     ):
         return await super().get_context(origin, cls=cls)
 
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.CommandNotFound):
+            return
+        if isinstance(error, commands.NotOwner):
+            return
+        print(error)
+
     @property
     def db(self):
         """to execute raw queries"""
