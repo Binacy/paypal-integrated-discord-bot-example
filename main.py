@@ -1,4 +1,4 @@
-import discord, asyncio, core.config as config
+import discord, asyncio, config
 from discord import AllowedMentions, Activity, ActivityType
 from core.bot import ppbot
 

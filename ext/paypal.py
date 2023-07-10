@@ -1,4 +1,4 @@
-import aiohttp, core.config as config, asyncio
+import aiohttp, config, asyncio
 from discord.ext import commands
 from models import Transactions, Products
 

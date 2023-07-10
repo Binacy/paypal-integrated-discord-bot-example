@@ -1,4 +1,4 @@
-import aiohttp, discord, core.config as config
+import aiohttp, discord, config
 from typing import Union
 from discord.ext import commands
 from discord import utils as discord_utils
