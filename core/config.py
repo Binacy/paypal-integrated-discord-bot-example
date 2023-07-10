@@ -1,6 +1,6 @@
 import urllib.parse as up
 
-owners = [380697024120487939]
+owners = [380697024120487939,]
 token = "MTExOTY0OTI3MDUyMjQ2MjI2Mg.GZVdFv.S2qdirpg_2W6xNIBFNelBEbsXHggoM0F2nrfWc"
 paypal_client_id = (
     "AeFiqh0QC0AqTXmflgxWUEEyx_DcoEm8jLmsUvVSbCRS7aX53B0ctnrNirGHbsPmHr20GWb2mLFWOUdU"

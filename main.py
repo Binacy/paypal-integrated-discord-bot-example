@@ -2,6 +2,8 @@ import discord, asyncio, core.config as config
 from discord import AllowedMentions, Activity, ActivityType
 from core.bot import ppbot
 
+#TODO: /off command with % with specific role | temprole with paypal
+
 intents = discord.Intents.default()
 intents.message_content = True
 
