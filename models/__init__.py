@@ -75,6 +75,7 @@ class Products(models.Model):
     id = fields.IntField(pk=True, generated=True)
     name = fields.TextField()
     price = fields.IntField()
+    discount = fields.IntField(default=0)
     description = fields.TextField()
     role = fields.BigIntField(null=True)
     stock = fields.IntField(default=10)
@@ -82,3 +83,10 @@ class Products(models.Model):
     image = fields.TextField(null=True)
     example_image = fields.TextField(null=True)
     temp = fields.BooleanField(default=False)
+
+class RoleDiscounts(models.Model):
+    class Meta:
+        table = "role_discounts"
+
+    role_id = fields.BigIntField(pk=True)
+    discount = fields.IntField(default=0)
