@@ -1,13 +1,34 @@
 import discord, aiohttp
 from discord.ext import commands
 from discord import app_commands
-from models import Products, Transactions
+from models import Products, Transactions, RoleDiscounts
 from core.utils import ButtonPagination, email_input, prompt
 
 
 class cmds(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @app_commands.command(name="role-discount")
+    @commands.is_owner()
+    async def _role_discount(
+        self, interaction: discord.Interaction, role: discord.Role, discount: int
+    ):
+        try:
+            r = await RoleDiscounts.get(role_id=role.id)
+            if discount == 0:
+                await r.delete()
+                await interaction.response.send_message(
+                    f"Discount for {role.name} removed!"
+                )
+                return
+            r.discount = discount
+            await r.save()
+        except:
+            await RoleDiscounts.create(role_id=role.id, discount=discount)
+        await interaction.response.send_message(
+            f"Discount for {role.name} set to {discount}%"
+        )
 
     @app_commands.command(name="buy")
     async def _buy(self, interaction: discord.Interaction, product_id: int = None):
@@ -44,6 +65,13 @@ class cmds(commands.Cog):
                     "You don't have the required role to buy this product!"
                 )
                 return
+            product_price = product.price
+            if product.discount > 0:
+                product_price -= (product_price * product.discount / 100)
+            role_discount = await RoleDiscounts.all()
+            for r in role_discount:
+                if r.role_id in [r.id for r in interaction.user.roles]:
+                    product_price -= (product_price * r.discount / 100)
             await interaction.response.send_message(
                 "Please provide your email address, I'll create an invoice for you!\nPlease send your email only nothing else!"
             )
@@ -125,7 +153,7 @@ class cmds(commands.Cog):
                         "quantity": "1",
                         "unit_amount": {
                             "currency_code": "USD",
-                            "value": f"{product.price}",
+                            "value": f"{product_price}",
                         },
                         "unit_of_measure": "QUANTITY",
                     }
@@ -160,7 +188,7 @@ class cmds(commands.Cog):
                 payapl_id=uid,
                 user_id=interaction.user.id,
                 product_id=product.id,
-                amount=product.price,
+                amount=product_price,
                 product_name=product.name,
             )
             return
@@ -180,6 +208,11 @@ class cmds(commands.Cog):
             embed.add_field(name="Price", value=f"{p.price}$")
             embed.add_field(name="Product ID", value=f"`{p.id}`")
             embed.add_field(name="Stock", value=f"{p.stock}")
+            if p.discount > 0:
+                embed.add_field(
+                    name="Discounted Price",
+                    value=f"{p.price - (p.price * p.discount / 100)}$",
+                )
             if p.example_image:
                 embed.set_image(url=p.example_image)
             if p.temp:
@@ -223,21 +256,24 @@ class cmds(commands.Cog):
 
     @app_commands.command(name="discount")
     @commands.is_owner()
-    async def discount(self, interaction: discord.Interaction, discount: int):
-        ignored = []
-        async for p in Products.all():
-            p.price = p.price - (p.price * (discount / 100))
-            if p.price <= 0:
-                ignored.append(p.name)
-                continue
-            await p.save()
-        fmt = (
-            None
-            if len(ignored) == 0
-            else f"\nCannot apply discount on: {', '.join(ignored)}"
-        )
+    async def discount(self, interaction: discord.Interaction, discount: int, product_id: int = None):
+        if not product_id:
+            async for p in Products.all():
+                p.discount = discount
+                await p.save()
+            await interaction.response.send_message(
+                f"Discounted all products by {discount}%"
+            )
+            return
+        try:
+            product = await Products.get(id=product_id)
+        except:
+            await interaction.response.send_message("Product not found!")
+            return
+        product.discount = discount
+        await product.save()
         await interaction.response.send_message(
-            f"Discounted all products by {discount}%{fmt}"
+            f"Discounted {product.name} by {discount}%"
         )
 
     @app_commands.command(name="product-add")
