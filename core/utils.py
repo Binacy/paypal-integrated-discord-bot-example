@@ -1,4 +1,5 @@
 import typing, discord, itertools, asyncio
+from typing import Optional, NamedTuple
 from discord.ext import commands
 from discord import (
     Embed,
@@ -6,9 +7,95 @@ from discord import (
     ui,
     ButtonStyle,
     Color,
+    Message,
 )
-from typing import NamedTuple
 
+class choose(ui.View):
+    def __init__(
+        self, *, timeout: float, author_id: list, ctx, delete_after: bool
+    ) -> None:
+        super().__init__(timeout=timeout)
+        self.value: Optional[str] = None
+        self.delete_after: bool = delete_after
+        self.author_id: list = author_id
+        self.ctx = ctx
+        self.message: Optional[Message] = None
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        if interaction.user and interaction.user.id in self.author_id:
+            return True
+        await interaction.response.send_message(
+            "This is not for you dummy.", ephemeral=True
+        )
+        return False
+
+    async def on_timeout(self) -> None:
+        try:
+            if self.message:
+                return await self.message.delete()
+        except:
+            return
+
+    @ui.button(style=ButtonStyle.grey, emoji='1️⃣')
+    async def one(self, interaction, button):
+        self.value = '1'
+        await interaction.response.defer()
+        if self.delete_after:
+            await interaction.message.delete()
+        self.stop()
+
+    @ui.button(style=ButtonStyle.grey, emoji='2️⃣')
+    async def two(self, interaction, button):
+        self.value = '2'
+        await interaction.response.defer()
+        if self.delete_after:
+            await interaction.message.delete()
+        self.stop()
+
+    @ui.button(style=ButtonStyle.grey, emoji='3️⃣')
+    async def three(self, interaction, button):
+        self.value = '3'
+        await interaction.response.defer()
+        if self.delete_after:
+            await interaction.message.delete()
+        self.stop()
+
+    @ui.button(style=ButtonStyle.grey, emoji='4️⃣')
+    async def four(self, interaction, button):
+        self.value = '4'
+        await interaction.response.defer()
+        if self.delete_after:
+            await interaction.message.delete()
+        self.stop()
+
+    @ui.button(style=ButtonStyle.grey, emoji="⏹️")
+    async def stawppp(self, interaction, button):
+        await interaction.response.defer()
+        await interaction.message.delete()
+        self.stop()
+
+async def choose_one(ctx, choices):
+    authors = [ctx.author.id]
+    for i in ctx.bot.owner_ids:
+        authors.append(i)
+    view = choose(timeout=30, delete_after=False, ctx=ctx, author_id=authors)
+    embed = Embed(
+        description=(
+            "Please choose your time duration for buying this role:\n\n"
+            + "\n".join(choices)
+        ),
+        color=0x26fcff,
+    )
+    embed.set_author(
+        name=f"{ctx.author}",
+        icon_url=ctx.author.avatar.url
+    )
+
+    view.message = await ctx.channel.send(content=None, embed=embed, view=view)
+    await view.wait()
+    if view.value is None:
+        return None
+    return choices[view.value]
 
 async def email_input(ctx, check, timeout=60):
     try:
