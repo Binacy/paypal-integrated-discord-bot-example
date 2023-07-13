@@ -2,8 +2,6 @@ import discord, asyncio, config
 from discord import AllowedMentions, Activity, ActivityType
 from core.bot import ppbot
 
-#TODO: temprole with paypal
-
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -17,6 +15,7 @@ botwa = ppbot(
     ),
     activity=Activity(type=ActivityType.listening, name=f"hello world!"),
 )
+
 
 async def main():
     async with botwa:
