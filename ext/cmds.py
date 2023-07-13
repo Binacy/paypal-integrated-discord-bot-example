@@ -1,6 +1,7 @@
 import discord, aiohttp
 from discord.ext import commands
 from discord import app_commands
+from datetime import datetime, timedelta
 from models import (
     Products,
     Transactions,
@@ -8,12 +9,30 @@ from models import (
     Role_Products,
     Role_Transactions,
 )
-from core.utils import ButtonPagination, email_input, prompt
+from core.utils import ButtonPagination, email_input, prompt, choose_one
 
 
 class cmds(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_role_buy_timer_complete(self, timer):
+        guild = self.bot.get_guild(timer.guild_id)
+        if not guild:
+            return
+        role = guild.get_role(timer.message_id)
+        if not role:
+            return
+        try:
+            member = guild.get_member(timer.author_id) or await guild.fetch_member(timer.author_id)
+        except:
+            return
+        try:
+            await member.remove_roles(role)
+            await member.send(f"Your role {role.name} has expired!")
+        except:
+            return
 
     @app_commands.command(name="buy-role")
     async def __buy(self, interaction: discord.Interaction, role: discord.Role = None):
@@ -23,7 +42,9 @@ class cmds(commands.Cog):
             if message.author == ctx.author and message.channel == ctx.channel:
                 return True
 
-        r = await Role_Transactions.filter(user_id=interaction.user.id, paid=False).all()
+        r = await Role_Transactions.filter(
+            user_id=interaction.user.id, paid=False
+        ).all()
         if r:
             await interaction.response.send_message(
                 f"You already have an invoice pending, please complete that purchase here https://www.paypal.com/invoice/payerView/details/{r[0].payapl_id}"
@@ -48,6 +69,27 @@ class cmds(commands.Cog):
                 if r.role_id in [r.id for r in interaction.user.roles]:
                     product_price -= product_price * (r.discount / 100)
             await interaction.response.send_message(
+                "Initiating purchase for this role!"
+            )
+            choices = [
+                "1) 1 Month",
+                "2) 3 Months",
+                "3) 6 Months",
+                "4) 12 Months",
+            ]
+            duration_dict = {
+                "1": datetime.utcnow() + timedelta(days=30),
+                "2": datetime.utcnow() + timedelta(days=90),
+                "3": datetime.utcnow() + timedelta(days=180),
+                "4": datetime.utcnow() + timedelta(days=365),
+            }
+            duration = await choose_one(ctx, choices)
+            if not duration:
+                await ctx.channel.send("Alright! Cancelling the order!")
+                return
+            duration = duration_dict[duration]
+
+            await ctx.channel.send(
                 "Please provide your email address, I'll create an invoice for you!\nPlease send your email only nothing else!"
             )
             email = await email_input(ctx, check)
@@ -165,6 +207,13 @@ class cmds(commands.Cog):
                 role_id=role.id,
                 amount=product_price,
                 role_name=role.name,
+            )
+            await self.bot.timers.create(
+                event=f"role_buy",
+                expires=duration,
+                author_id=interaction.user.id,
+                guild_id=interaction.guild.id,
+                message_id=role.id,
             )
             return
         embeds = []
