@@ -248,6 +248,7 @@ class cmds(commands.Cog):
         await Role_Products.create(
             role_name=role.name,
             role_id=role.id,
+            guild_id=interaction.guild.id,
             price=price,
             description=description,
             stock=stock,
