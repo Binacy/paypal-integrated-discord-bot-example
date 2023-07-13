@@ -24,6 +24,10 @@ class ppbot(commands.Bot):
         print(error)
 
     @property
+    def timors(self):
+        return self.get_cog("timers_cog")
+
+    @property
     def db(self):
         """to execute raw queries"""
         return Tortoise.get_connection("default")._pool
@@ -37,6 +41,7 @@ class ppbot(commands.Bot):
             setattr(self, model_name, model)
         await self.load_extension("ext.cmds")
         await self.load_extension("ext.paypal")
+        await self.load_extension("ext.timers")
         await self.load_extension("jishaku")
 
     async def close(self):
