@@ -16,7 +16,7 @@ class paypal(commands.Cog):
         for t in records:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    f"https://api.sandbox.paypal.com/v2/invoicing/invoices/{t.payapl_id}"
+                    f"https://api.paypal.com/v2/invoicing/invoices/{t.payapl_id}"
                     ) as resp:
                     data = await resp.json()
                     if data["status"] == "PAID":
@@ -46,7 +46,7 @@ class paypal(commands.Cog):
         for t in records:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    f"https://api.sandbox.paypal.com/v2/invoicing/invoices/{t.payapl_id}"
+                    f"https://api.paypal.com/v2/invoicing/invoices/{t.payapl_id}"
                     ) as resp:
                     data = await resp.json()
                     if data["status"] == "PAID":
@@ -64,7 +64,7 @@ class paypal(commands.Cog):
     async def token_refresher(self):
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                "https://api.sandbox.paypal.com/v1/oauth2/token",
+                "https://api.paypal.com/v1/oauth2/token",
                 headers={
                     "Accept": "application/json",
                     "Accept-Language": "en_US",
