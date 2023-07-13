@@ -178,7 +178,7 @@ class cmds(commands.Cog):
             }
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    "https://api.sandbox.paypal.com/v2/invoicing/invoices",
+                    "https://api.paypal.com/v2/invoicing/invoices",
                     headers={
                         "Authorization": f"Bearer {self.bot.temp_token}",
                         "Content-Type": "application/json",
@@ -189,7 +189,7 @@ class cmds(commands.Cog):
                     uid = (await resp.json())["id"]
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    f"https://api.sandbox.paypal.com/v2/invoicing/invoices/{uid}/send",
+                    f"https://api.paypal.com/v2/invoicing/invoices/{uid}/send",
                     headers={
                         "Authorization": f"Bearer {self.bot.temp_token}",
                         "Content-Type": "application/json",
@@ -413,7 +413,7 @@ class cmds(commands.Cog):
             }
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    "https://api.sandbox.paypal.com/v2/invoicing/invoices",
+                    "https://api.paypal.com/v2/invoicing/invoices",
                     headers={
                         "Authorization": f"Bearer {self.bot.temp_token}",
                         "Content-Type": "application/json",
@@ -424,7 +424,7 @@ class cmds(commands.Cog):
                     uid = (await resp.json())["id"]
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    f"https://api.sandbox.paypal.com/v2/invoicing/invoices/{uid}/send",
+                    f"https://api.paypal.com/v2/invoicing/invoices/{uid}/send",
                     headers={
                         "Authorization": f"Bearer {self.bot.temp_token}",
                         "Content-Type": "application/json",
@@ -493,7 +493,7 @@ class cmds(commands.Cog):
         await transaction.delete()
         async with aiohttp.ClientSession() as session:
             async with session.delete(
-                f"https://api.sandbox.paypal.com/v2/invoicing/invoices/{transaction.payapl_id}",
+                f"https://api.paypal.com/v2/invoicing/invoices/{transaction.payapl_id}",
                 headers={"Authorization": f"Bearer {self.bot.temp_token}"},
             ) as resp:
                 print(f"Invoice cancelled for {transaction.user_id}")
