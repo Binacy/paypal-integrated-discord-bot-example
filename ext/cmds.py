@@ -201,7 +201,7 @@ class cmds(commands.Cog):
                 "I've sent you an invoice on your email! Please check your email and pay the invoice, Thanks for purchasing with us!"
             )
             await Role_Transactions.create(
-                id=f"TXN-{interaction.user.id}",
+                iid=f"TXN-{interaction.user.id}",
                 payapl_id=uid,
                 user_id=interaction.user.id,
                 role_id=role.id,
@@ -436,7 +436,7 @@ class cmds(commands.Cog):
                 "I've sent you an invoice on your email! Please check your email and pay the invoice, Thanks for purchasing with us!"
             )
             await Transactions.create(
-                id=f"TXN-{interaction.user.id}",
+                iid=f"TXN-{interaction.user.id}",
                 payapl_id=uid,
                 user_id=interaction.user.id,
                 product_id=product.id,
@@ -481,7 +481,7 @@ class cmds(commands.Cog):
     @commands.is_owner()
     async def _cancel(self, interaction: discord.Interaction, transaction_id: int):
         try:
-            transaction = await Transactions.get(id=transaction_id)
+            transaction = await Transactions.get(iid=transaction_id)
         except:
             await interaction.response.send_message(
                 "Transaction not found! Hint: transaction ids look like TXN-{user id}"
