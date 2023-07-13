@@ -84,9 +84,36 @@ class Products(models.Model):
     example_image = fields.TextField(null=True)
     temp = fields.BooleanField(default=False)
 
+
 class RoleDiscounts(models.Model):
     class Meta:
         table = "role_discounts"
 
     role_id = fields.BigIntField(pk=True)
     discount = fields.IntField(default=0)
+
+
+class Role_Products(models.Model):
+    class Meta:
+        table = "role_products"
+
+    role_id = fields.BigIntField(pk=True)
+    role_name = fields.TextField()
+    price = fields.IntField()
+    description = fields.TextField()
+    discount = fields.IntField(default=0)
+    stock = fields.IntField(default=10)
+
+
+class Role_Transactions(models.Model):
+    class Meta:
+        table = "role_transactions"
+
+    id = fields.TextField(pk=True)
+    payapl_id = fields.TextField()
+    user_id = fields.BigIntField()
+    paid = fields.BooleanField(default=False)
+    amount = fields.IntField()
+    role_id = fields.BigIntField()
+    role_name = fields.TextField()
+    timestamp = fields.DatetimeField(auto_now_add=True)
