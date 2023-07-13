@@ -99,6 +99,7 @@ class Role_Products(models.Model):
 
     role_id = fields.BigIntField(pk=True)
     role_name = fields.TextField()
+    guild_id = fields.BigIntField()
     price = fields.IntField()
     description = fields.TextField()
     discount = fields.IntField(default=0)
