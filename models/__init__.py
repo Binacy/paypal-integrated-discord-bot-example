@@ -117,3 +117,19 @@ class Role_Transactions(models.Model):
     role_id = fields.BigIntField()
     role_name = fields.TextField()
     timestamp = fields.DatetimeField(auto_now_add=True)
+
+
+class Timers(models.Model):
+    class Meta:
+        table = "timers"
+
+    id = fields.IntField(pk=True, index=True)
+    event = fields.CharField(max_length=1000, null=True)
+    guild_id = fields.BigIntField(null=True)
+    channel_id = fields.BigIntField(null=True)
+    author_id = fields.BigIntField(null=True)
+    message = fields.CharField(max_length=4000, null=True)
+    expires = fields.DatetimeField(null=True)
+    created_at = fields.DatetimeField(null=True)
+    message_id = fields.BigIntField(null=True)
+    jump_url = fields.CharField(max_length=1000, null=True)
