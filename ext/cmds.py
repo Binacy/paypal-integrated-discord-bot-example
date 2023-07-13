@@ -1,13 +1,215 @@
 import discord, aiohttp
 from discord.ext import commands
 from discord import app_commands
-from models import Products, Transactions, RoleDiscounts
+from models import (
+    Products,
+    Transactions,
+    RoleDiscounts,
+    Role_Products,
+    Role_Transactions,
+)
 from core.utils import ButtonPagination, email_input, prompt
 
 
 class cmds(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @app_commands.command(name="buy-role")
+    async def __buy(self, interaction: discord.Interaction, role: discord.Role = None):
+        ctx = await self.bot.get_context(interaction)
+
+        def check(message):
+            if message.author == ctx.author and message.channel == ctx.channel:
+                return True
+
+        r = await Role_Transactions.filter(user_id=interaction.user.id, paid=False).all()
+        if r:
+            await interaction.response.send_message(
+                f"You already have an invoice pending, please complete that purchase here https://www.paypal.com/invoice/payerView/details/{r[0].payapl_id}"
+            )
+            return
+        if role:
+            try:
+                product = await Role_Products.get(role_id=role.id)
+            except:
+                await interaction.response.send_message(
+                    "Product not found! Use /buy-role to see all currently selling roles!"
+                )
+                return
+            if product.stock <= 0:
+                await interaction.response.send_message("This product is out of stock!")
+                return
+            product_price = product.price
+            if product.discount > 0:
+                product_price -= product_price * (product.discount / 100)
+            role_discount = await RoleDiscounts.all()
+            for r in role_discount:
+                if r.role_id in [r.id for r in interaction.user.roles]:
+                    product_price -= product_price * (r.discount / 100)
+            await interaction.response.send_message(
+                "Please provide your email address, I'll create an invoice for you!\nPlease send your email only nothing else!"
+            )
+            email = await email_input(ctx, check)
+            confirm = await prompt(
+                ctx,
+                f"Can you confirm {email} is corrent and you can recieve invoice on this email?",
+                author_id=ctx.author.id,
+            )
+            if not confirm:
+                await ctx.channel.send("Alright! Cancelling the order!")
+                return
+            uid = None
+            paypal_data = {
+                "detail": {
+                    "invoice_number": f"TXN-ROLE-{interaction.user.id}",
+                    "reference": "deal-ref",
+                    "currency_code": "USD",
+                    "note": "Thank you for your purchase!!!.",
+                    "term": "No refunds.",
+                },
+                "invoicer": {
+                    "name": {"given_name": "David", "surname": "Larusso"},
+                    "address": {
+                        "address_line_1": "1234 First Street",
+                        "address_line_2": "337673 Hillside Court",
+                        "admin_area_2": "Anytown",
+                        "admin_area_1": "CA",
+                        "postal_code": "98765",
+                        "country_code": "US",
+                    },
+                    "email_address": "merchant@example.com",
+                    "phones": [
+                        {
+                            "country_code": "001",
+                            "national_number": "4085551234",
+                            "phone_type": "MOBILE",
+                        }
+                    ],
+                    "website": "www.test.com",
+                    "logo_url": "https://example.com/logo.PNG",
+                },
+                "primary_recipients": [
+                    {
+                        "billing_info": {
+                            "name": {"given_name": "Stephanie", "surname": "Meyers"},
+                            "address": {
+                                "address_line_1": "1234 Main Street",
+                                "admin_area_2": "Anytown",
+                                "admin_area_1": "CA",
+                                "postal_code": "98765",
+                                "country_code": "US",
+                            },
+                            "email_address": f"{email}",
+                            "phones": [
+                                {
+                                    "country_code": "001",
+                                    "national_number": "4884551234",
+                                    "phone_type": "HOME",
+                                }
+                            ],
+                        },
+                        "shipping_info": {
+                            "name": {"given_name": "Stephanie", "surname": "Meyers"},
+                            "address": {
+                                "address_line_1": "1234 Main Street",
+                                "admin_area_2": "Anytown",
+                                "admin_area_1": "CA",
+                                "postal_code": "98765",
+                                "country_code": "US",
+                            },
+                        },
+                    }
+                ],
+                "items": [
+                    {
+                        "name": f"{product.role_name}",
+                        "description": f"{product.description}",
+                        "quantity": "1",
+                        "unit_amount": {
+                            "currency_code": "USD",
+                            "value": f"{product_price}",
+                        },
+                        "unit_of_measure": "QUANTITY",
+                    }
+                ],
+            }
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    "https://api.sandbox.paypal.com/v2/invoicing/invoices",
+                    headers={
+                        "Authorization": f"Bearer {self.bot.temp_token}",
+                        "Content-Type": "application/json",
+                        "Prefer": "return=representation",
+                    },
+                    json=paypal_data,
+                ) as resp:
+                    uid = (await resp.json())["id"]
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"https://api.sandbox.paypal.com/v2/invoicing/invoices/{uid}/send",
+                    headers={
+                        "Authorization": f"Bearer {self.bot.temp_token}",
+                        "Content-Type": "application/json",
+                    },
+                    json={"send_to_invoicer": True},
+                ) as resp:
+                    print(f"Invoice sent to {email}!")
+            await ctx.channel.send(
+                "I've sent you an invoice on your email! Please check your email and pay the invoice, Thanks for purchasing with us!"
+            )
+            await Role_Transactions.create(
+                id=f"TXN-{interaction.user.id}",
+                payapl_id=uid,
+                user_id=interaction.user.id,
+                role_id=role.id,
+                amount=product_price,
+                role_name=role.name,
+            )
+            return
+        embeds = []
+        async for p in Role_Products.all():
+            if p.stock <= 0:
+                continue
+            embed = discord.Embed(
+                color=0x26FCFF, title=p.role_name, description=p.description
+            )
+            embed.add_field(name="Price", value=f"{p.price}$")
+            embed.add_field(name="Stock", value=f"{p.stock}")
+            if p.discount > 0:
+                embed.add_field(
+                    name="Discounted Price",
+                    value=f"{p.price - (p.price * p.discount / 100)}$",
+                )
+            embed.set_footer(text="To buy this product, use /buy-role <role>")
+            embeds.append(embed)
+        sexy_paginator = ButtonPagination()
+        await sexy_paginator.start(ctx, pages=embeds)
+
+    @app_commands.command(name="product-role-add")
+    @commands.is_owner()
+    async def _add(
+        self,
+        interaction: discord.Interaction,
+        role: discord.Role,
+        price: int,
+        description: str,
+        stock: int = 10,
+    ):
+        await Role_Products.create(
+            role_name=role.name,
+            role_id=role.id,
+            price=price,
+            description=description,
+            stock=stock,
+        )
+        await interaction.response.send_message(f"Added role {role} with 10 stocks!")
+
+    @app_commands.command(name="product-role-remove")
+    @commands.is_owner()
+    async def _remove(self, interaction: discord.Interaction, role: discord.Role):
+        await Role_Products.filter(role_id=role.id).delete()
+        await interaction.response.send_message("Removed role!")
 
     @app_commands.command(name="role-discount")
     @commands.is_owner()
@@ -41,7 +243,7 @@ class cmds(commands.Cog):
         r = await Transactions.filter(user_id=interaction.user.id, paid=False).all()
         if r:
             await interaction.response.send_message(
-                "You already have an order pending, please complete that purchase first! Use /order-cancel <transaction id> to cancel it!"
+                f"You already have an invoice pending, please complete that purchase here https://www.paypal.com/invoice/payerView/details/{r[0].payapl_id}"
             )
             return
         if product_id:
@@ -67,11 +269,11 @@ class cmds(commands.Cog):
                 return
             product_price = product.price
             if product.discount > 0:
-                product_price -= (product_price * product.discount / 100)
+                product_price -= product_price * (product.discount / 100)
             role_discount = await RoleDiscounts.all()
             for r in role_discount:
                 if r.role_id in [r.id for r in interaction.user.roles]:
-                    product_price -= (product_price * r.discount / 100)
+                    product_price -= product_price * (r.discount / 100)
             await interaction.response.send_message(
                 "Please provide your email address, I'll create an invoice for you!\nPlease send your email only nothing else!"
             )
@@ -251,12 +453,18 @@ class cmds(commands.Cog):
     @commands.is_owner()
     async def earnings(self, interaction: discord.Interaction):
         records = await Transactions.filter(paid=True).all()
-        total = sum([r.amount for r in records])
-        await interaction.response.send_message(f"Total earnings: {total}")
+        gfx_total = sum([r.amount for r in records])
+        records = await Role_Transactions.filter(paid=True).all()
+        role_total = sum([r.amount for r in records])
+        await interaction.response.send_message(
+            f"Total earnings: {gfx_total + role_total}$\nGFX: {gfx_total}$\nRoles: {role_total}$"
+        )
 
     @app_commands.command(name="discount")
     @commands.is_owner()
-    async def discount(self, interaction: discord.Interaction, discount: int, product_id: int = None):
+    async def discount(
+        self, interaction: discord.Interaction, discount: int, product_id: int = None
+    ):
         if not product_id:
             async for p in Products.all():
                 p.discount = discount
