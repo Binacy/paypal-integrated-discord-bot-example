@@ -23,7 +23,7 @@ pip3 install -U -r reqs.txt
 
 3. Create a discord application and bot on [Discord Developer Portal](https://discord.com/developers/applications)
 4. Rename the [example.config.py](https://github.com/gauravwtf/paypal-integrated-discord-bot-example/example.config.py) file to config.py
-5. Complete the config.py file with your bot token, application id and public key from the discord developer portal.
+5. Complete the config.py file.
 
 6. Run the bot
 
@@ -41,6 +41,6 @@ Distributed under the MIT License. See [LICENSE](https://github.com/gauravwtf/pa
 
 ## Contact
 
-Discord - [@wtfgaurav](https://discord.gg/gaurav)
+Discord - [@wtfgaurav](https://discord.com/users/380697024120487939)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
