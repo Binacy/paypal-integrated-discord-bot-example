@@ -47,7 +47,7 @@ class cmds(commands.Cog):
         ).all()
         if r:
             await interaction.response.send_message(
-                f"You already have an invoice pending, please complete that purchase here https://www.paypal.com/invoice/payerView/details/{r[0].payapl_id}"
+                f"You already have an invoice pending, please complete that purchase here https://www.paypal.com/invoice/payerView/details/{r[0].paypal_id}"
             )
             return
         if role:
@@ -202,7 +202,7 @@ class cmds(commands.Cog):
             )
             await Role_Transactions.create(
                 iid=f"TXN-{interaction.user.id}",
-                payapl_id=uid,
+                paypal_id=uid,
                 user_id=interaction.user.id,
                 role_id=role.id,
                 amount=product_price,
@@ -253,7 +253,7 @@ class cmds(commands.Cog):
             description=description,
             stock=stock,
         )
-        await interaction.response.send_message(f"Added role {role} with 10 stocks!")
+        await interaction.response.send_message(f"Added role {role} with {stock} stocks!")
 
     @app_commands.command(name="product-role-remove")
     @commands.is_owner()
@@ -293,7 +293,7 @@ class cmds(commands.Cog):
         r = await Transactions.filter(user_id=interaction.user.id, paid=False).all()
         if r:
             await interaction.response.send_message(
-                f"You already have an invoice pending, please complete that purchase here https://www.paypal.com/invoice/payerView/details/{r[0].payapl_id}"
+                f"You already have an invoice pending, please complete that purchase here https://www.paypal.com/invoice/payerView/details/{r[0].paypal_id}"
             )
             return
         if product_id:
@@ -437,7 +437,7 @@ class cmds(commands.Cog):
             )
             await Transactions.create(
                 iid=f"TXN-{interaction.user.id}",
-                payapl_id=uid,
+                paypal_id=uid,
                 user_id=interaction.user.id,
                 product_id=product.id,
                 amount=product_price,
@@ -493,7 +493,7 @@ class cmds(commands.Cog):
         await transaction.delete()
         async with aiohttp.ClientSession() as session:
             async with session.delete(
-                f"https://api.paypal.com/v2/invoicing/invoices/{transaction.payapl_id}",
+                f"https://api.paypal.com/v2/invoicing/invoices/{transaction.paypal_id}",
                 headers={"Authorization": f"Bearer {self.bot.temp_token}"},
             ) as resp:
                 print(f"Invoice cancelled for {transaction.user_id}")

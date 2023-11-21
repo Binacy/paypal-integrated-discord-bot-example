@@ -1,11 +1,11 @@
 import discord, asyncio, config
 from discord import AllowedMentions, Activity, ActivityType
-from core.bot import ppbot
+from core.bot import PayPalBot
 
 intents = discord.Intents.default()
 intents.message_content = True
 
-botwa = ppbot(
+bot = PayPalBot(
     command_prefix="$",
     owner_ids=config.owners,
     intents=intents,
@@ -18,8 +18,8 @@ botwa = ppbot(
 
 
 async def main():
-    async with botwa:
-        await botwa.start(config.token)
+    async with bot:
+        await bot.start(config.token)
 
 
 if __name__ == "__main__":

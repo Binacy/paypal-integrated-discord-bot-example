@@ -16,7 +16,7 @@ class paypal(commands.Cog):
         for t in records:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    f"https://api.paypal.com/v2/invoicing/invoices/{t.payapl_id}"
+                    f"https://api.paypal.com/v2/invoicing/invoices/{t.paypal_id}"
                     ) as resp:
                     data = await resp.json()
                     if data["status"] == "PAID":
@@ -46,7 +46,7 @@ class paypal(commands.Cog):
         for t in records:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    f"https://api.paypal.com/v2/invoicing/invoices/{t.payapl_id}"
+                    f"https://api.paypal.com/v2/invoicing/invoices/{t.paypal_id}"
                     ) as resp:
                     data = await resp.json()
                     if data["status"] == "PAID":

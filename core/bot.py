@@ -7,12 +7,16 @@ from tortoise import Tortoise
 discord_utils.setup_logging()
 
 
-class ppbot(commands.Bot):
+class PayPalBot(commands.Bot):
     async def on_ready(self):
         print(f"Logged on as {self.user}!")
 
     async def get_context(
-        self, origin: Union[discord.Interaction, discord.Message], /, *, cls=commands.Context
+        self,
+        origin: Union[discord.Interaction, discord.Message],
+        /,
+        *,
+        cls=commands.Context,
     ):
         return await super().get_context(origin, cls=cls)
 

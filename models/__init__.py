@@ -59,7 +59,7 @@ class Transactions(models.Model):
         table = "transactions"
 
     iid = fields.TextField()
-    payapl_id = fields.TextField()
+    paypal_id = fields.TextField()
     user_id = fields.BigIntField()
     paid = fields.BooleanField(default=False)
     amount = fields.IntField()
@@ -111,7 +111,7 @@ class Role_Transactions(models.Model):
         table = "role_transactions"
 
     iid = fields.TextField()
-    payapl_id = fields.TextField()
+    paypal_id = fields.TextField()
     user_id = fields.BigIntField()
     paid = fields.BooleanField(default=False)
     amount = fields.IntField()
