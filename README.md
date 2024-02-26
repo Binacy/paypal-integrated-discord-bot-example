@@ -41,6 +41,6 @@ Distributed under the MIT License. See [LICENSE](https://github.com/gauravwtf/pa
 
 ## Contact
 
-Discord - [@wtfgaurav](https://discord.com/users/380697024120487939)
+Discord - [@Binacy](https://discord.com/users/1211202988518146050)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
